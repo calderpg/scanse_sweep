@@ -55,39 +55,44 @@ void publish_scan(ros::Publisher& pub, const sweep::scan& scan, const std::strin
 
 int main(int argc, char** argv)
 {
-    //Initialize Node and handles
+    // Initialize Node and handles
     ros::init(argc, argv, "sweep_node");
+    ROS_INFO_NAMED(ros::this_node::getName(), "Starting sweep_node");
     ros::NodeHandle nh;
     ros::NodeHandle nhp("~");
-    //Get Serial Parameters
+    //G et Serial Parameters
     const std::string serial_port = nhp.param(std::string("serial_port"), std::string("/dev/ttyUSB0"));
-    //const int serial_baudrate = nhp.param(std::string("serial_baudrate"), 115200);
-    //Get Scanner Parameters
+    // Get Scanner Parameters
     const int rotation_speed = nhp.param(std::string("rotation_speed"), 5);
     const int sample_rate = nhp.param(std::string("sample_rate"), 500);
-    //Get frame_id Parameter
+    // Get frame_id Parameter
     const std::string frame_id = nhp.param(std::string("frame_id"), std::string("sweep_frame"));
-    //Setup Publisher
-    ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>("sweep_scan", 1000);
+    // Get scan topic
+    const std::string scan_topic = nhp.param(std::string("scan_topic"), std::string("sweep_scan"));
+    // Setup Publisher
+    ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>(scan_topic, 1, false);
     try
     {
-        //Create Sweep Driver Object
+        // Create Sweep Driver Object
+        ROS_INFO_NAMED(ros::this_node::getName(), "Starting sweep device");
         sweep::sweep device{serial_port.c_str()};
-        //Send Rotation Speed
+        // Send Rotation Speed
         device.set_motor_speed(rotation_speed);
-        //Send Sample Rate
+        // Send Sample Rate
         device.set_sample_rate(sample_rate);
         ROS_INFO_NAMED(ros::this_node::getName(), "Expected rotation frequency: %d (Hz)", rotation_speed);
-        //Start Scan
+        // Start Scan
+        ROS_INFO_NAMED(ros::this_node::getName(), "Starting scan loop");
         device.start_scanning();
         while (ros::ok())
         {
-            //Grab Full Scan
+            // Grab Full Scan
             const sweep::scan scan = device.get_scan();
             publish_scan(scan_pub, scan, frame_id);
             ros::spinOnce();
         }
-        //Stop Scanning & Destroy Driver
+        // Stop Scanning & Destroy Driver
+        ROS_INFO_NAMED(ros::this_node::getName(), "Closing sweep device");
         device.stop_scanning();
     }
     catch (const sweep::device_error& error)

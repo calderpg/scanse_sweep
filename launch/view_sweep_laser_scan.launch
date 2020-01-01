@@ -1,5 +1,5 @@
 <launch>
-  <include file="$(find sweep_ros)/launch/sweep2scan.launch" />
+  <include file="$(find scanse_sweep)/launch/sweep2scan.launch" />
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find sweep_ros)/rviz/sweep_laser_scan.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find scanse_sweep)/rviz/sweep_laser_scan.rviz" />
 </launch>
